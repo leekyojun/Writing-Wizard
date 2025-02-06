@@ -645,3 +645,4 @@ try {
   console.error(err);
   finalResult.textContent = "에러 발생: " + err.message;
 }
+});
