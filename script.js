@@ -464,6 +464,58 @@ btnDraftFeedback.addEventListener("click", async () => {
     await callOpenAIAPIStream(systemPrompt, userPrompt, (token) => {
       accumulatedText += token;
       draftFeedbackResult.textContent = accumulatedText;
+
+
+// 2) 스트리밍 완료 후, 점수 파싱 + 그래프 업데이트
+const ideaRegex = /Idea Score:\s*(\d{1,3})/i;
+const structRegex = /Structure Score:\s*(\d{1,3})/i;
+const accuRegex = /Accuracy Score:\s*(\d{1,3})/i;
+
+const ideaMatch = ideaRegex.exec(accumulatedText);
+const structureMatch = structRegex.exec(accumulatedText);
+const accuracyMatch = accuRegex.exec(accumulatedText);
+
+let ideaScore = null;
+let structureScore = null;
+let accuracyScore = null;
+
+if (ideaMatch) {
+  const val = parseInt(ideaMatch[1], 10);
+  if (!isNaN(val) && val >= 0 && val <= 100) {
+    ideaScore = val;
+  }
+}
+if (structureMatch) {
+  const val = parseInt(structureMatch[1], 10);
+  if (!isNaN(val) && val >= 0 && val <= 100) {
+    structureScore = val;
+  }
+}
+if (accuracyMatch) {
+  const val = parseInt(accuracyMatch[1], 10);
+  if (!isNaN(val) && val >= 0 && val <= 100) {
+    accuracyScore = val;
+  }
+}
+
+// 3) 그래프 업데이트
+if (ideaScore !== null && structureScore !== null && accuracyScore !== null) {
+  updateGraphWithScores(ideaScore, structureScore, accuracyScore);
+}
+
+// 4) "Feedback:" 이후만 화면에 최종 표시
+let feedbackText = "";
+const feedbackIndex = accumulatedText.indexOf("Feedback:");
+if (feedbackIndex !== -1) {
+  const startPos = feedbackIndex + "Feedback:".length;
+  feedbackText = accumulatedText.substring(startPos).trim();
+} else {
+  feedbackText = accumulatedText;
+}
+draftFeedbackResult.textContent = feedbackText;
+
+
+
     });
   } catch (err) {
     console.error(err);
@@ -548,53 +600,7 @@ try {
     window.scrollTo(0, document.body.scrollHeight);
   });
 
-  // 2) 스트리밍 완료 후, 점수 파싱 + 그래프 업데이트
-  const ideaRegex = /Idea Score:\s*(\d{1,3})/i;
-  const structRegex = /Structure Score:\s*(\d{1,3})/i;
-  const accuRegex = /Accuracy Score:\s*(\d{1,3})/i;
-
-  const ideaMatch = ideaRegex.exec(accumulatedText);
-  const structureMatch = structRegex.exec(accumulatedText);
-  const accuracyMatch = accuRegex.exec(accumulatedText);
-
-  let ideaScore = null;
-  let structureScore = null;
-  let accuracyScore = null;
-
-  if (ideaMatch) {
-    const val = parseInt(ideaMatch[1], 10);
-    if (!isNaN(val) && val >= 0 && val <= 100) {
-      ideaScore = val;
-    }
-  }
-  if (structureMatch) {
-    const val = parseInt(structureMatch[1], 10);
-    if (!isNaN(val) && val >= 0 && val <= 100) {
-      structureScore = val;
-    }
-  }
-  if (accuracyMatch) {
-    const val = parseInt(accuracyMatch[1], 10);
-    if (!isNaN(val) && val >= 0 && val <= 100) {
-      accuracyScore = val;
-    }
-  }
-
-  // 3) 그래프 업데이트
-  if (ideaScore !== null && structureScore !== null && accuracyScore !== null) {
-    updateGraphWithScores(ideaScore, structureScore, accuracyScore);
-  }
-
-  // 4) "Feedback:" 이후만 화면에 최종 표시
-  let feedbackText = "";
-  const feedbackIndex = accumulatedText.indexOf("Feedback:");
-  if (feedbackIndex !== -1) {
-    const startPos = feedbackIndex + "Feedback:".length;
-    feedbackText = accumulatedText.substring(startPos).trim();
-  } else {
-    feedbackText = accumulatedText;
-  }
-  finalResult.textContent = feedbackText;
+  
 
 } catch (err) {
   console.error(err);
