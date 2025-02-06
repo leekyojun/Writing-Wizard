@@ -552,19 +552,18 @@ btnFinalSubmit.addEventListener("click", async () => {
   finalResult.textContent = "이미지 생성 중입니다...\n";
 
   try {
-    // 1) Worker Proxy로 DALL-E-2 이미지 생성 요청
-    //    실제로는 type: "image_generation" 등으로 백엔드에서 처리하도록 설정
+    // 1) Worker Proxy로 DALL-E-2 이미지 생성 요청    
     const response = await fetch(WORKER_PROXY_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        // 모델: DALL-E-2
+        
         model: "dall-e-2",
         // 백엔드(Worker)에서 구분할 수 있게 type을 지정했다고 가정
         type: "image_generation",
-        prompt: finalContent,
+        prompt: `A storybook illustration of ${finalContent}, watercolor style with soft lighting, child-friendly vibrant colors`,
         n: 1,
         size: "512x512",
       }),
@@ -586,13 +585,12 @@ btnFinalSubmit.addEventListener("click", async () => {
     // 3) 최종 결과 영역에 이미지와 최종 글 함께 배치
     //    기존의 '피드백'은 제거하고, 간단한 안내와 함께 표시
     finalResult.innerHTML = `
-        <div style="margin-bottom: 1rem;">
-        <img src="${imageUrl}" alt="Generated Image" style="max-width: 300px; border: 1px solid #ccc;" />
-      </div>
-      <hr />
-      <p><strong>Final Draft 내용:</strong></p>
-      <p>${finalContent}</p>
-    `;
+          <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+          <img src="${imageUrl}" alt="Generated Image" style="max-width: 300px; border: 1px solid #ccc;" />
+          <p style="flex: 1;">${finalContent}</p>
+          </div>
+          <hr />
+        `;
 
     // 스크롤/포커스
     finalResult.scrollIntoView({ behavior: "smooth" });    
