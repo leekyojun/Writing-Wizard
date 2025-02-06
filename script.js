@@ -1,7 +1,6 @@
 // Cloudflare Worker의 proxy URL
 const WORKER_PROXY_URL = "https://odd-dream-7597.kyojun75.workers.dev/proxy";
 
-
 // DOM 요소들
 const btnBrainstorm    = document.getElementById("btnBrainstorm");
 const brainstormResult = document.getElementById("brainstormResult");
@@ -401,57 +400,17 @@ btnDraftFeedback.addEventListener("click", async () => {
   const difficultyDesc = getDifficultyDescription();
 
   const systemPrompt = `
-  You are an English tutor for Korean students. 
+  You are a friendly English tutor. 
   The student's language level is: ${difficultyDesc}.
-  Your role is to provide feedback on a student's first draft. 
-
-  First, provide numeric scores (10 to 100) and detailed, actionable feedback for the following categories:
-   - Idea Score: Evaluate the diversity of ideas, depth of thought, and relevance to the topic.  
-     - Criteria:
-       - 10~29: Minimal ideas with limited depth or relevance.  
-       - 30~59: Some ideas are present but lack diversity or detail.  
-       - 60~89: Ideas are moderately diverse and relevant but need more depth.  
-       - 90~100: Clear, relevant, and diverse ideas.         
-     - If the content is too short to evaluate, assign a low score (10~29).  
-   - Structure Score: Assess logical flow, organization, and effective use of transitions.  
-     - Criteria:
-       - 10~29: Writing lacks clear organization or transitions.  
-       - 30~59: Some organization exists, but transitions are weak, and logical flow is inconsistent.  
-       - 60~89: Structure is developing but could improve with better transitions.  
-       - 90~100: Well-organized writing with logical flow.         
-     - If the writing is too short to demonstrate structure, assign a low score (10~29).  
-   - Accuracy Score: Rate the accuracy of the final draft considering the student's language level. Focus on whether errors significantly impact clarity or communication.  
-    - Criteria:
-      - 10~29: Frequent and critical grammar errors that impede understanding.  
-      - 30~59: Many noticeable errors that occasionally disrupt clarity but the overall meaning is understandable.  
-      - 60~89: Functional grammar and vocabulary with minor errors that do not significantly affect understanding.  
-      - 90~100: Highly accurate use of grammar, vocabulary, and spelling. Minimal or no error.  
-    - If the writing is error-free or contains only minor errors that do not affect understanding, assign a score closer to 100, regardless of simplicity.   
-
-  After providing the scores, write a Feedback section in Korean.  
-  The feedback should:  
-   1) Start with a positive comment about the student's writing.
-   2) Provide clear suggestions for further improvement, focusing on the student's language level.  
-   4) Use motivating and encouraging language to inspire the student to improve.
+  Your role is to provide constructive and positive feedback on a student's first draft. 
+  Always begin with a positive comment about what the student did well, and follow with clear suggestions for improvement. 
+  Use simple Korean to ensure the feedback is approachable and easy to understand.
   `;
 
   const userPrompt = `
-  
-  Please porovide feedback on the student's writing. 
-  The student's language level: ${difficultyDesc}.
-  Student's first draft: "${draft}"
-
-
-  Please output in the following style (exactly one line each for the scores):
-  
-  Idea Score: XX
-  Structure Score: YY
-  Accuracy Score: ZZ
-
-  Then, after those 3 lines, write "Feedback:" on a new line and provide the rest of your feedback in Korean. 
-  Start with a positive comment about the student's overall effort, highlighting specific examples of how the student tried to explain his or her ideas in English. 
-  Provide feedback in the following structure:  
-
+  Student's first draft:
+  "${draft}"
+  Provide feedback focusing on the following areas:  
    1) [아이디어]💡 Suggest how the student can add more interesting or relevant details to make the writing richer. Include one specific example.  
    2) [글의 구성]🧩 Point out how the student can enhance the organization or flow of their draft. Provide an example of a possible revision.  
    3) [글의 정확성]📝 Highlight key language issues (e.g., grammar, word choice) with a brief explanation and an example correction.  
@@ -464,58 +423,6 @@ btnDraftFeedback.addEventListener("click", async () => {
     await callOpenAIAPIStream(systemPrompt, userPrompt, (token) => {
       accumulatedText += token;
       draftFeedbackResult.textContent = accumulatedText;
-
-
-// 2) 스트리밍 완료 후, 점수 파싱 + 그래프 업데이트
-const ideaRegex = /Idea Score:\s*(\d{1,3})/i;
-const structRegex = /Structure Score:\s*(\d{1,3})/i;
-const accuRegex = /Accuracy Score:\s*(\d{1,3})/i;
-
-const ideaMatch = ideaRegex.exec(accumulatedText);
-const structureMatch = structRegex.exec(accumulatedText);
-const accuracyMatch = accuRegex.exec(accumulatedText);
-
-let ideaScore = null;
-let structureScore = null;
-let accuracyScore = null;
-
-if (ideaMatch) {
-  const val = parseInt(ideaMatch[1], 10);
-  if (!isNaN(val) && val >= 0 && val <= 100) {
-    ideaScore = val;
-  }
-}
-if (structureMatch) {
-  const val = parseInt(structureMatch[1], 10);
-  if (!isNaN(val) && val >= 0 && val <= 100) {
-    structureScore = val;
-  }
-}
-if (accuracyMatch) {
-  const val = parseInt(accuracyMatch[1], 10);
-  if (!isNaN(val) && val >= 0 && val <= 100) {
-    accuracyScore = val;
-  }
-}
-
-// 3) 그래프 업데이트
-if (ideaScore !== null && structureScore !== null && accuracyScore !== null) {
-  updateGraphWithScores(ideaScore, structureScore, accuracyScore);
-}
-
-// 4) "Feedback:" 이후만 화면에 최종 표시
-let feedbackText = "";
-const feedbackIndex = accumulatedText.indexOf("Feedback:");
-if (feedbackIndex !== -1) {
-  const startPos = feedbackIndex + "Feedback:".length;
-  feedbackText = accumulatedText.substring(startPos).trim();
-} else {
-  feedbackText = accumulatedText;
-}
-draftFeedbackResult.textContent = feedbackText;
-
-
-
     });
   } catch (err) {
     console.error(err);
@@ -528,13 +435,6 @@ btnImportDraft.addEventListener("click", () => {
   finalText.innerText = draftText.innerText;
 });
 
-/** 
- * (수정된) 최종 제출 이벤트 리스너
- * ---------------------------------------
- * 1) Final Draft 내용을 prompt로 하여 DALL-E-2로 이미지 생성
- * 2) 생성된 이미지 + Final Draft 텍스트를 함께 표시 (피드백은 제거)
- * ---------------------------------------
- */
 btnFinalSubmit.addEventListener("click", async () => {
   // 첫 번째 Draft 미작성 방어
   if (!firstDraftContent) {
@@ -549,56 +449,199 @@ btnFinalSubmit.addEventListener("click", async () => {
     return;
   }
 
-  finalResult.textContent = "이미지 생성 중입니다...\n";
-
-  try {
-    // 1) Worker Proxy로 DALL-E-2 이미지 생성 요청    
-    const response = await fetch(WORKER_PROXY_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        
-        model: "dall-e-2",
-        // 백엔드(Worker)에서 구분할 수 있게 type을 지정했다고 가정
-        type: "image_generation",
-        prompt: `A storybook illustration of ${finalContent}, watercolor style with soft lighting, child-friendly vibrant colors`,
-        n: 1,
-        size: "512x512",
-      }),
-    });
-
-    if (!response.ok) {
-      const errorMsg = await response.text();
-      throw new Error("이미지 생성 API 에러: " + errorMsg);
-    }
-
-    // 2) 이미지 URL 파싱
-    const data = await response.json();
-    // OpenAI Images API는 data.data[0].url 형태로 옴
-    const imageUrl = data?.data?.[0]?.url;
-    if (!imageUrl) {
-      throw new Error("이미지 URL이 존재하지 않습니다.");
-    }
-
-    // 3) 최종 결과 영역에 이미지와 최종 글 함께 배치
-    //    기존의 '피드백'은 제거하고, 간단한 안내와 함께 표시
-    finalResult.innerHTML = `
-          <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
-          <img src="${imageUrl}" alt="Generated Image" style="max-width: 300px; border: 1px solid #ccc;" />
-          <p style="flex: 1;">${finalContent}</p>
-          </div>
-          <hr />
-        `;
+  finalResult.textContent = "최종 평가 생성 중입니다...\n";
 
     // 스크롤/포커스
     finalResult.scrollIntoView({ behavior: "smooth" });    
     finalResult.setAttribute("tabindex", "-1");
     finalResult.focus();
+  
+  const difficultyDesc = getDifficultyDescription();
 
-  } catch (err) {
-    console.error(err);
-    finalResult.textContent = "에러 발생: " + err.message;
+  const systemPrompt = `
+  You are an English tutor who evaluates a student's final draft.  
+  The student's language level is: ${difficultyDesc}.
+  Your role is to provide numeric scores (10 to 100) and detailed, actionable feedback for the following categories:
+
+   - Idea Score: Evaluate the diversity of ideas, depth of thought, and relevance to the topic.  
+     - Criteria:
+       - 10~29: Minimal ideas with limited depth or relevance.  
+       - 30~59: Some ideas are present but lack diversity or detail.  
+       - 60~89: Ideas are moderately diverse and relevant but need more depth.  
+       - 90~100: Clear, relevant, and diverse ideas.         
+     - If the content is too short to evaluate, assign a low score (10~29).  
+
+   - Structure Score: Assess logical flow, organization, and effective use of transitions.  
+     - Criteria:
+       - 10~29: Writing lacks clear organization or transitions.  
+       - 30~59: Some organization exists, but transitions are weak, and logical flow is inconsistent.  
+       - 60~89: Structure is developing but could improve with better transitions.  
+       - 90~100: Well-organized writing with logical flow.         
+     - If the writing is too short to demonstrate structure, assign a low score (10~29).  
+
+   - Accuracy Score: Rate the accuracy of the final draft considering the student's language level. Focus on whether errors significantly impact clarity or communication.  
+    - Criteria:
+      - 10~29: Frequent and critical grammar errors that impede understanding.  
+      - 30~59: Many noticeable errors that occasionally disrupt clarity but the overall meaning is understandable.  
+      - 60~89: Functional grammar and vocabulary with minor errors that do not significantly affect understanding.  
+      - 90~100: Highly accurate use of grammar, vocabulary, and spelling. Minimal or no error.  
+    - If the writing is error-free or contains only minor errors that do not affect understanding, assign a score closer to 100, regardless of simplicity.   
+
+  After providing the scores, write a Feedback section in Korean.  
+  The feedback should:  
+   1) Start with a positive comment about the student's effort and overall improvement.  
+   2) Explain why the student received each score (Idea, Structure, Accuracy) with specific examples from their writing. 
+   3) Provide clear suggestions for further improvement, focusing on the student's language level.  
+   4) Use motivating and encouraging language to inspire the student to improve.
+  `;
+
+  const userPrompt = `
+  Student's final draft:
+  "${finalContent}"
+  Student's first draft:  
+  "${firstDraftContent}" 
+
+  Please output in the following style (exactly one line each for the scores):
+  
+  Idea Score: XX
+  Structure Score: YY
+  Accuracy Score: ZZ
+
+  Then, after those 3 lines, write "Feedback:" on a new line and provide the rest of your final feedback in Korean. 
+  Start with a positive comment about the student's overall effort and improvements, highlighting specific examples of how the final draft has improved compared to the first draft. 
+  Provide feedback in the following structure:  
+
+  1) [아이디어]💡 
+     - Evaluate the richness of ideas in the final draft.  
+     - Comment on how well the ideas are developed and their relevance to the topic.  
+     - Suggest specific ways to make the ideas more engaging or detailed.  
+
+  2) [글의 구성]🧩
+     - Evaluate the organization and logical flow in the final draft.  
+     - Highlight strengths in structure and suggest improvements for better clarity and readability.  
+     - Provide an example of how the organization could be improved.
+
+  3) [글의 정확성]📝 
+     - Evaluate grammar in the final draft.
+     - Provide corrections or explanations if needed.   
+
+  Ensure your feedback is motivating and encourages the student to continue improving their writing. Be concise but thorough.
+`;
+
+let accumulatedText = "";
+try {
+  await callOpenAIAPIStream(systemPrompt, userPrompt, (token) => {
+    // 스트리밍된 텍스트를 누적
+    accumulatedText += token;
+    finalResult.textContent = accumulatedText;
+    window.scrollTo(0, document.body.scrollHeight);
+  });
+
+  // 2) 스트리밍 완료 후, 점수 파싱 + 그래프 업데이트
+  const ideaRegex = /Idea Score:\s*(\d{1,3})/i;
+  const structRegex = /Structure Score:\s*(\d{1,3})/i;
+  const accuRegex = /Accuracy Score:\s*(\d{1,3})/i;
+
+  const ideaMatch = ideaRegex.exec(accumulatedText);
+  const structureMatch = structRegex.exec(accumulatedText);
+  const accuracyMatch = accuRegex.exec(accumulatedText);
+
+  let ideaScore = null;
+  let structureScore = null;
+  let accuracyScore = null;
+
+  if (ideaMatch) {
+    const val = parseInt(ideaMatch[1], 10);
+    if (!isNaN(val) && val >= 0 && val <= 100) {
+      ideaScore = val;
+    }
   }
-});
+  if (structureMatch) {
+    const val = parseInt(structureMatch[1], 10);
+    if (!isNaN(val) && val >= 0 && val <= 100) {
+      structureScore = val;
+    }
+  }
+  if (accuracyMatch) {
+    const val = parseInt(accuracyMatch[1], 10);
+    if (!isNaN(val) && val >= 0 && val <= 100) {
+      accuracyScore = val;
+    }
+  }
+
+  // 3) 그래프 업데이트
+  if (ideaScore !== null && structureScore !== null && accuracyScore !== null) {
+    updateGraphWithScores(ideaScore, structureScore, accuracyScore);
+  }
+
+  // 4) "Feedback:" 이후만 화면에 최종 표시
+  let feedbackText = "";
+  const feedbackIndex = accumulatedText.indexOf("Feedback:");
+  if (feedbackIndex !== -1) {
+    const startPos = feedbackIndex + "Feedback:".length;
+    feedbackText = accumulatedText.substring(startPos).trim();
+  } else {
+    feedbackText = accumulatedText;
+  }
+
+  // 평가 결과 섹션 (Final Draft 평가)
+  finalResult.innerHTML = `
+    <h3>Evaluation Results</h3>
+    <p><strong>Idea Score:</strong> ${ideaScore !== null ? ideaScore : "N/A"}</p>
+    <p><strong>Structure Score:</strong> ${structureScore !== null ? structureScore : "N/A"}</p>
+    <p><strong>Accuracy Score:</strong> ${accuracyScore !== null ? accuracyScore : "N/A"}</p>
+    <hr />
+    <h3>Feedback</h3>
+    <p>${feedbackText}</p>
+    <hr />
+  `;
+
+  // 1) Worker Proxy로 DALL-E-2 이미지 생성 요청    
+  const response = await fetch(WORKER_PROXY_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "dall-e-2",
+      type: "image_generation",
+      prompt: `A storybook illustration of ${finalContent}, watercolor style with soft lighting, child-friendly vibrant colors`,
+      n: 1,
+      size: "512x512",
+    }),
+  });
+
+  if (!response.ok) {
+    const errorMsg = await response.text();
+    throw new Error("이미지 생성 API 에러: " + errorMsg);
+  }
+
+  // 2) 이미지 URL 파싱
+  const data = await response.json();
+  const imageUrl = data?.data?.[0]?.url;
+  if (!imageUrl) {
+    throw new Error("이미지 URL이 존재하지 않습니다.");
+  }
+
+  // 3) "My Portfolio" 섹션 추가 및 이미지 + Final Draft 배치
+  const portfolioSection = document.createElement("div");
+  portfolioSection.innerHTML = `
+    <h3>My Portfolio</h3>
+    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+      <img src="${imageUrl}" alt="Generated Image" style="max-width: 300px; border: 1px solid #ccc;" />
+      <p style="flex: 1;">${finalContent}</p>
+    </div>
+    <hr />
+  `;
+
+  finalResult.appendChild(portfolioSection);
+
+  // 스크롤/포커스
+  finalResult.scrollIntoView({ behavior: "smooth" });
+  finalResult.setAttribute("tabindex", "-1");
+  finalResult.focus();
+
+} catch (err) {
+  console.error(err);
+  finalResult.textContent = "에러 발생: " + err.message;
+}
