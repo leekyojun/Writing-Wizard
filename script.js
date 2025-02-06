@@ -584,18 +584,6 @@ try {
     feedbackText = accumulatedText;
   }
 
-  // 평가 결과 섹션 (Final Draft 평가)
-  finalResult.innerHTML = `
-    <h3>Evaluation Results</h3>
-    <p><strong>Idea Score:</strong> ${ideaScore !== null ? ideaScore : "N/A"}</p>
-    <p><strong>Structure Score:</strong> ${structureScore !== null ? structureScore : "N/A"}</p>
-    <p><strong>Accuracy Score:</strong> ${accuracyScore !== null ? accuracyScore : "N/A"}</p>
-    <hr />
-    <h3>Feedback</h3>
-    <p>${feedbackText}</p>
-    <hr />
-  `;
-
   // 1) Worker Proxy로 DALL-E-2 이미지 생성 요청    
   const response = await fetch(WORKER_PROXY_URL, {
     method: "POST",
