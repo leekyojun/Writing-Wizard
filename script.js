@@ -1,5 +1,5 @@
 // Cloudflare Worker의 proxy URL
-const WORKER_PROXY_URL = "https://twilight-cell-92de.kyojun75.workers.dev/proxy";
+const WORKER_PROXY_URL = "https://odd-dream-7597.kyojun75.workers.dev/proxy";
 
 
 // DOM 요소들
@@ -528,6 +528,13 @@ btnImportDraft.addEventListener("click", () => {
   finalText.innerText = draftText.innerText;
 });
 
+/** 
+ * (수정된) 최종 제출 이벤트 리스너
+ * ---------------------------------------
+ * 1) Final Draft 내용을 prompt로 하여 DALL-E-2로 이미지 생성
+ * 2) 생성된 이미지 + Final Draft 텍스트를 함께 표시 (피드백은 제거)
+ * ---------------------------------------
+ */
 btnFinalSubmit.addEventListener("click", async () => {
   // 첫 번째 Draft 미작성 방어
   if (!firstDraftContent) {
@@ -542,69 +549,58 @@ btnFinalSubmit.addEventListener("click", async () => {
     return;
   }
 
-  finalResult.textContent = "최종 평가 생성 중입니다...\n";
+  finalResult.textContent = "이미지 생성 중입니다...\n";
+
+  try {
+    // 1) Worker Proxy로 DALL-E-2 이미지 생성 요청
+    //    실제로는 type: "image_generation" 등으로 백엔드에서 처리하도록 설정
+    const response = await fetch(WORKER_PROXY_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        // 모델: DALL-E-2
+        model: "dall-e-2",
+        // 백엔드(Worker)에서 구분할 수 있게 type을 지정했다고 가정
+        type: "image_generation",
+        prompt: finalContent,
+        n: 1,
+        size: "512x512",
+      }),
+    });
+
+    if (!response.ok) {
+      const errorMsg = await response.text();
+      throw new Error("이미지 생성 API 에러: " + errorMsg);
+    }
+
+    // 2) 이미지 URL 파싱
+    const data = await response.json();
+    // OpenAI Images API는 data.data[0].url 형태로 옴
+    const imageUrl = data?.data?.[0]?.url;
+    if (!imageUrl) {
+      throw new Error("이미지 URL이 존재하지 않습니다.");
+    }
+
+    // 3) 최종 결과 영역에 이미지와 최종 글 함께 배치
+    //    기존의 '피드백'은 제거하고, 간단한 안내와 함께 표시
+    finalResult.innerHTML = `
+        <div style="margin-bottom: 1rem;">
+        <img src="${imageUrl}" alt="Generated Image" style="max-width: 300px; border: 1px solid #ccc;" />
+      </div>
+      <hr />
+      <p><strong>Final Draft 내용:</strong></p>
+      <p>${finalContent}</p>
+    `;
 
     // 스크롤/포커스
     finalResult.scrollIntoView({ behavior: "smooth" });    
     finalResult.setAttribute("tabindex", "-1");
     finalResult.focus();
-  
-  const difficultyDesc = getDifficultyDescription();
 
-  const systemPrompt = `
-  You are an English tutor who evaluates a student's final draft.  
-  The student's language level is: ${difficultyDesc}.
-  
-  `;
-
-  const userPrompt = `
-  Student's final draft:
-  "${finalContent}"
-  Student's first draft:  
-  "${firstDraftContent}" 
-
-  Please output in the following style (exactly one line each for the scores):
-  
-  Idea Score: XX
-  Structure Score: YY
-  Accuracy Score: ZZ
-
-  Then, after those 3 lines, write "Feedback:" on a new line and provide the rest of your final feedback in Korean. 
-  Start with a positive comment about the student's overall effort and improvements, highlighting specific examples of how the final draft has improved compared to the first draft. 
-  Provide feedback in the following structure:  
-
-  1) [아이디어]💡 
-     - Evaluate the richness of ideas in the final draft.  
-     - Comment on how well the ideas are developed and their relevance to the topic.  
-     - Suggest specific ways to make the ideas more engaging or detailed.  
-
-  2) [글의 구성]🧩
-     - Evaluate the organization and logical flow in the final draft.  
-     - Highlight strengths in structure and suggest improvements for better clarity and readability.  
-     - Provide an example of how the organization could be improved.
-
-  3) [글의 정확성]📝 
-     - Evaluate grammar in the final draft.
-     - Provide corrections or explanations if needed.   
-
-  Ensure your feedback is motivating and encourages the student to continue improving their writing. Be concise but thorough.
-`;
-
-let accumulatedText = "";
-try {
-  
-  await callOpenAIAPIStream(systemPrompt, userPrompt, (token) => {
-    // 스트리밍된 텍스트를 누적
-    accumulatedText += token;
-    finalResult.textContent = accumulatedText;
-    window.scrollTo(0, document.body.scrollHeight);
-  });
-
-  
-
-} catch (err) {
-  console.error(err);
-  finalResult.textContent = "에러 발생: " + err.message;
-}
+  } catch (err) {
+    console.error(err);
+    finalResult.textContent = "에러 발생: " + err.message;
+  }
 });
-
