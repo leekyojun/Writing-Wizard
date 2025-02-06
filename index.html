@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Writing Wizard </title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pretendard/dist/web/static/pretendard.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <div class="container">
+    <img 
+      class="logo"
+      src="https://www.yoons.com/assets/image/a/ci-kr-horizontal.svg" 
+      alt="Yoon's Logo" 
+    />
+    <div>
+      <img class="main-title" src="Title.png" alt="Writing Wizard" />
+    </div>
+
+    <!-- 난이도 선택 영역 -->
+    <div class="level-container" style="display: flex; align-items: center; gap: 8px;">
+        <label for="studentDifficulty"  style="font-weight: 600;">난이도 선택</label>
+        <select id="studentDifficulty" style="padding: 4px 8px; height: 30px;">
+          <option value="상">고급 </option>
+          <option value="중" selected>중급</option>
+          <option value="하">초급 </option>
+        </select>
+    </div>
+
+    <!-- 1) Brainstorming -->
+    <div class="section">
+      <h2 class="section-title">1. Brainstorming: 아이디어를 함께 생각해요.</h2>
+      
+      <!-- 주제 입력 + 버튼 -->
+      <div>
+        <label for="topic" style="display:block; font-weight:600;">주제 입력</label>
+        <div style="display: flex; flex-wrap: wrap; gap: 4px; align-items: flex-end;">  
+        <input 
+          type="text" 
+          id="topic"
+          placeholder="예: My Summer Vacation"
+          class="topic-input"
+        />
+        <button id="btnBrainstorm">생성</button>
+      </div>
+      </div>
+
+      <!-- 결과 표시 -->
+      <div id="brainstormResult" class="result-box">
+        (결과가 여기에 표시됩니다.)
+      </div>
+    </div>
+
+    <!-- 2) Developing Ideas -->
+    <div class="section">
+      <h2 class="section-title">2. Developing Ideas: 아이디어를 발전시켜요.</h2>
+      <label for="ideaSelect" style="display:block; font-weight:600; margin-bottom: -8px">아이디어 선택</label>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end;">            
+        <div style="display: flex; gap:8px; align-items:center; flex:1;">          
+          <select id="ideaSelect" class="idea-select"></select>
+          <div id="customIdeaContainer" style="display: none;">
+            <input type="text" id="customIdeaInput" placeholder="키워드를 입력하세요"/>            
+          </div>           
+          <button id="btnVocab">생성</button>
+        </div>  
+       
+      </div>
+
+      <!-- 결과 표시 -->
+      <div id="vocabResult" class="result-box">
+        (결과가 여기에 표시됩니다.)
+      </div>
+    </div>
+
+    <!-- 3) First Draft -->
+    <div class="section">
+      <h2 class="section-title">3. First Draft: 자유롭게 글을 써 봐요.</h2>
+
+
+  <!-- 이미지 업로드 버튼 -->
+  <div class="image-upload-group">
+    <label class="camera-btn">
+      <input type="file" id="cameraDraft" accept="image/*" capture="environment" hidden>
+      <span class="btn-text">카메라 촬영</span>
+    </label>
+    <label class="image-btn">
+      <input type="file" id="uploadDraft" accept="image/*" hidden>
+      <span class="btn-text">이미지 업로드</span>
+    </label>
+  </div>
+     
+
+
+  <!-- 초안 텍스트박스 -->
+    <div id="draftText" class="draft-textarea" contenteditable="plaintext-only"></div>
+    <button id="btnDraftFeedback">AI 피드백 생성</button>
+
+  <!-- 그래프 영역 -->
+  <div class="graph-wrap">    
+    <div class="circle-graph">
+      <div>
+        <div class="circle-label">아이디어</div>
+        <div class="circle">
+          <svg width="150" height="150">
+            <circle class="bg" cx="75" cy="75" r="60"></circle>
+            <circle class="progress" cx="75" cy="75" r="60"></circle>
+          </svg>
+          <div class="value"></div>
+        </div>
+      </div>
+      <div>
+        <div class="circle-label">글의 구성</div>
+        <div class="circle">
+          <svg width="150" height="150">
+            <circle class="bg" cx="75" cy="75" r="60"></circle>
+            <circle class="progress" cx="75" cy="75" r="60"></circle>
+          </svg>
+          <div class="value"></div>
+        </div>
+      </div>
+      <div>
+        <div class="circle-label">표현의 정확성</div>
+        <div class="circle">
+          <svg width="150" height="150">
+            <circle class="bg" cx="75" cy="75" r="60"></circle>
+            <circle class="progress" cx="75" cy="75" r="60"></circle>
+          </svg>
+          <div class="value"></div>
+        </div>
+      </div>
+      <div>
+        <div class="circle-label">총점</div>
+        <div class="circle total">
+          <svg width="150" height="150">
+            <circle class="bg" cx="75" cy="75" r="60"></circle>
+            <circle class="progress" cx="75" cy="75" r="60"></circle>
+          </svg>
+          <div class="value"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+
+
+  <!-- 결과 표시 -->
+   <div id="draftFeedbackResult" class="result-box">
+      (피드백이 여기에 표시됩니다.)
+   </div>
+  </div>
+
+    <!-- 4) Final Draft -->
+    <div class="section">
+      <h2 class="section-title">4. Final Draft: 멋진 글을 완성하세요.</h2>
+  
+      
+    <!-- 이미지 업로드 버튼 -->
+  <div class="image-upload-group">
+    <label class="camera-btn">
+      <input type="file" id="cameraFinal" accept="image/*" capture="environment" hidden>
+      <span class="btn-text">카메라 촬영</span>
+    </label>
+    <label class="image-btn">
+      <input type="file" id="uploadFinal" accept="image/*" hidden>
+      <span class="btn-text">이미지 업로드</span>
+    </label>
+  </div>
+
+
+
+      <!-- 최종 글 텍스트박스  -->
+      <div id="finalText" class="draft-textarea" contenteditable="plaintext-only"></div>
+
+      <!-- 버튼 -->
+      <div style="display: flex; gap: 12px; justify-content: space-between; width: 100%; margin-bottom: 12px">
+        <button id="btnImportDraft" style="flex: 1; max-width: 200px;">First Draft 가져오기</button>
+        <button id="btnFinalSubmit" style="flex: 1; max-width: 100px;">제출</button>
+      </div>
+      
+
+<!-- 결과 표시 -->
+<div id="finalResult" class="result-box">
+  (평가 코멘트가 여기에 표시됩니다.)
+</div>
+
+    </div>
+
+    <footer class = "footer">
+
+    © Yoon's English School. All rights reserved.
+
+    </footer>
+
+  </div>  
+
+  <script src="script.js"></script>
+</body>
+</html>
