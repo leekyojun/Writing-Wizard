@@ -98,54 +98,6 @@
     <div id="draftText" class="draft-textarea" contenteditable="plaintext-only"></div>
     <button id="btnDraftFeedback">AI 피드백 생성</button>
 
-  <!-- 그래프 영역 -->
-  <div class="graph-wrap">    
-    <div class="circle-graph">
-      <div>
-        <div class="circle-label">아이디어</div>
-        <div class="circle">
-          <svg width="150" height="150">
-            <circle class="bg" cx="75" cy="75" r="60"></circle>
-            <circle class="progress" cx="75" cy="75" r="60"></circle>
-          </svg>
-          <div class="value"></div>
-        </div>
-      </div>
-      <div>
-        <div class="circle-label">글의 구성</div>
-        <div class="circle">
-          <svg width="150" height="150">
-            <circle class="bg" cx="75" cy="75" r="60"></circle>
-            <circle class="progress" cx="75" cy="75" r="60"></circle>
-          </svg>
-          <div class="value"></div>
-        </div>
-      </div>
-      <div>
-        <div class="circle-label">표현의 정확성</div>
-        <div class="circle">
-          <svg width="150" height="150">
-            <circle class="bg" cx="75" cy="75" r="60"></circle>
-            <circle class="progress" cx="75" cy="75" r="60"></circle>
-          </svg>
-          <div class="value"></div>
-        </div>
-      </div>
-      <div>
-        <div class="circle-label">총점</div>
-        <div class="circle total">
-          <svg width="150" height="150">
-            <circle class="bg" cx="75" cy="75" r="60"></circle>
-            <circle class="progress" cx="75" cy="75" r="60"></circle>
-          </svg>
-          <div class="value"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-  
-
-
   <!-- 결과 표시 -->
    <div id="draftFeedbackResult" class="result-box">
       (피드백이 여기에 표시됩니다.)
@@ -180,6 +132,52 @@
         <button id="btnFinalSubmit" style="flex: 1; max-width: 100px;">제출</button>
       </div>
       
+  <!-- 그래프 영역 -->
+<div class="graph-wrap">
+  <h2>평가 결과</h2>
+  <div class="circle-graph">
+    <div>
+      <div class="circle-label">아이디어</div>
+      <div class="circle">
+        <svg width="150" height="150">
+          <circle class="bg" cx="75" cy="75" r="60"></circle>
+          <circle class="progress" cx="75" cy="75" r="60"></circle>
+        </svg>
+        <div class="value"></div>
+      </div>
+    </div>
+    <div>
+      <div class="circle-label">글의 구성</div>
+      <div class="circle">
+        <svg width="150" height="150">
+          <circle class="bg" cx="75" cy="75" r="60"></circle>
+          <circle class="progress" cx="75" cy="75" r="60"></circle>
+        </svg>
+        <div class="value"></div>
+      </div>
+    </div>
+    <div>
+      <div class="circle-label">표현의 정확성</div>
+      <div class="circle">
+        <svg width="150" height="150">
+          <circle class="bg" cx="75" cy="75" r="60"></circle>
+          <circle class="progress" cx="75" cy="75" r="60"></circle>
+        </svg>
+        <div class="value"></div>
+      </div>
+    </div>
+    <div>
+      <div class="circle-label">총점</div>
+      <div class="circle total">
+        <svg width="150" height="150">
+          <circle class="bg" cx="75" cy="75" r="60"></circle>
+          <circle class="progress" cx="75" cy="75" r="60"></circle>
+        </svg>
+        <div class="value"></div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- 결과 표시 -->
 <div id="finalResult" class="result-box">
